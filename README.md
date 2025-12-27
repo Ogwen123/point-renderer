@@ -14,3 +14,7 @@ mkdir build
 cmake ..
 cmake build .
 ```
+
+## TODO
+
+-   [ ] load and display wavefont OBJ files

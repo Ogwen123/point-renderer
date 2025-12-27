@@ -13,7 +13,7 @@ static SDL_Renderer *renderer = NULL;
 #define WINDOW_HEIGHT 900
 #define FPS 60
 #define POINT_SIZE 30
-#define RPS 1
+#define RPS 0.5
 
 #define FG_R 0x50
 #define FG_G 0xff
@@ -44,19 +44,32 @@ bool operator<(const Line &lhs, const Line &rhs)
 }
 
 Point points[] = {
-    Point{0.5, 0.5, 1},
-    Point{-0.5, 0.5, 1},
-    Point{0.5, -0.5, 1},
-    Point{-0.5, -0.5, 1},
-    Point{0.5, 0.5, 2},
-    Point{-0.5, 0.5, 2},
-    Point{0.5, -0.5, 2},
-    Point{-0.5, -0.5, 2}};
+    Point{0.5, 0.5, -0.5},
+    Point{-0.5, 0.5, -0.5},
+    Point{0.5, -0.5, -0.5},
+    Point{-0.5, -0.5, -0.5},
+    Point{0.5, 0.5, 0.5},
+    Point{-0.5, 0.5, 0.5},
+    Point{0.5, -0.5, 0.5},
+    Point{-0.5, -0.5, 0.5}};
 
-std::vector<size_t> faces[] = {{0, 1, 2}, {1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {0, 2, 6}, {0, 4, 6}, {1, 3, 5}, {5, 3, 7}, {0, 1, 5}, {0, 4, 5}, {3, 7, 6}, {3, 2, 6}};
+// std::vector<size_t> faces[] = {{0, 1, 2}, {1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {0, 2, 6}, {0, 4, 6}, {1, 3, 5}, {5, 3, 7}, {0, 1, 5}, {0, 4, 5}, {3, 7, 6}, {3, 2, 6}};
+std::vector<size_t> faces[] = {
+    {1, 0},
+    {1, 3},
+    {1, 5},
+    {0, 4},
+    {0, 2},
+    {2, 6},
+    {2, 3},
+    {5, 4},
+    {4, 6},
+    {6, 7},
+    {7, 5},
+    {3, 7}};
 
 double angle = 0;
-double dist = 0;
+double dist = 3;
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
@@ -85,8 +98,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 SDL_FPoint screen(SDL_FPoint point)
 {
     SDL_FPoint res;
-    res.x = (point.x + 1) * (WINDOW_WIDTH / 2);
-    res.y = (1 - (point.y)) * (WINDOW_HEIGHT / 2);
+    res.x = ((point.x + 1) / 2) * WINDOW_WIDTH;
+    res.y = (1 - (point.y + 1) / 2) * WINDOW_HEIGHT;
 
     // std::cout << point.x << ", " << point.y << ", " << res.x << ", " << res.y << std::endl;
 
@@ -94,27 +107,18 @@ SDL_FPoint screen(SDL_FPoint point)
 }
 
 // rotate around the y axis
-Point *rotate_y(Point *points, size_t count, double angle)
+Point rotate_y(Point p, double angle)
 {
-    Point *rotated = new Point[count];
+    Point res;
 
-    for (int i = 0; i < count; i++)
-    {
-        Point p = points[i];
+    double s = sin(angle);
+    double c = cos(angle);
 
-        Point res;
+    res.x = c * p.x - s * p.z;
+    res.y = p.y;
+    res.z = s * p.x + c * p.z;
 
-        double s = sin(angle);
-        double c = cos(angle);
-
-        res.x = c * p.x - s * p.z;
-        res.y = p.y;
-        res.z = s * p.x + c * p.z;
-
-        rotated[i] = res;
-    }
-
-    return rotated;
+    return res;
 }
 
 SDL_FPoint project(Point point)
@@ -123,25 +127,7 @@ SDL_FPoint project(Point point)
 
     res.x = point.x / (point.z + dist);
     res.y = point.y / (point.z + dist);
-    return screen(res);
-}
-
-SDL_FPoint *project(Point *points, size_t count)
-{
-    SDL_FPoint *screen_points = new SDL_FPoint[count];
-
-    for (int i = 0; i < count; i++)
-    {
-        Point p = points[i];
-        SDL_FPoint res;
-
-        res.x = p.x / (p.z + dist);
-        res.y = p.y / (p.z + dist);
-        screen_points[i] = screen(res);
-        // std::cout << screen_points[i].x << ", " << screen_points[i].y << std::endl;
-    }
-
-    return screen_points;
+    return res;
 }
 
 SDL_FRect point_to_rect(SDL_FPoint p)
@@ -154,27 +140,6 @@ SDL_FRect point_to_rect(SDL_FPoint p)
     res.w = POINT_SIZE;
 
     return res;
-}
-
-SDL_FRect *point_to_rect(SDL_FPoint *points, size_t count)
-{
-
-    SDL_FRect *rects = new SDL_FRect[count];
-
-    for (int i = 0; i < count; i++)
-    {
-        SDL_FPoint p = points[i];
-        SDL_FRect res;
-
-        res.x = p.x - POINT_SIZE / 2;
-        res.y = p.y - POINT_SIZE / 2;
-        res.h = POINT_SIZE;
-        res.w = POINT_SIZE;
-
-        rects[i] = res;
-    }
-
-    return rects;
 }
 
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
@@ -191,7 +156,6 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     Uint64 start = SDL_GetTicks();
 
     angle += ((SDL_PI_D * 2) / FPS) * RPS;
-    dist += 0.01;
 
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(renderer);
@@ -201,19 +165,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
     size_t p_count = SDL_arraysize(points);
 
-    // Point *rotated = rotate_y(points, p_count, angle);
-    // size_t ro_count = SDL_arraysize(rotated);
-    SDL_FPoint *projected = project(points, p_count);
-    size_t pr_count = SDL_arraysize(projected);
-    SDL_FRect *rects = point_to_rect(projected, p_count);
-    size_t r_count = SDL_arraysize(rects);
-
-    // std::cout << "points: " << p_count << ", rotated: " << ro_count << ", projected: " << pr_count << ", rects: " << r_count << std::endl;
-
-    // draw as points
-    // SDL_RenderFillRects(renderer, rects, SDL_arraysize(points));
-
-    // draw as lines to create faces
+    // draw triangles from the faces array
 
     // don't draw the same line twice
     std::set<Line> to_draw = {};
@@ -222,10 +174,10 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     {
         std::vector<size_t> f = faces[i];
 
-        for (int j = 0; j < f.size(); i++)
+        for (int j = 0; j < f.size(); j++)
         {
-            SDL_FPoint start = project(points[f[j]]);
-            SDL_FPoint end = project(points[f[(j + 1) % f.size()]]);
+            SDL_FPoint start = screen(project(rotate_y(points[f[j]], angle)));
+            SDL_FPoint end = screen(project(rotate_y(points[f[(j + 1) % f.size()]], angle)));
 
             Line res;
 
@@ -234,6 +186,11 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
             to_draw.insert(res);
         }
+    }
+    std::cout << "processed lines to draw" << std::endl;
+    for (Line line : to_draw)
+    {
+        std::cout << line.start.x << std::endl;
     }
 
     for (Line line : to_draw)
