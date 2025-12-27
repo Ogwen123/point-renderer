@@ -2,6 +2,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <vector>
+#include <set>
 #include <iostream>
 #include <cmath>
 
@@ -25,6 +26,23 @@ struct Point
     float z;
 };
 
+struct Line
+{
+    SDL_FPoint start;
+    SDL_FPoint end;
+};
+
+bool operator<(const Line &lhs, const Line &rhs)
+{
+    if (lhs.start.x != rhs.start.x)
+        return lhs.start.x < rhs.start.x;
+    if (lhs.start.y != rhs.start.y)
+        return lhs.start.y < rhs.start.y;
+    if (lhs.end.x != rhs.end.x)
+        return lhs.end.x < rhs.end.x;
+    return lhs.end.y < rhs.end.y;
+}
+
 Point points[] = {
     Point{0.5, 0.5, 1},
     Point{-0.5, 0.5, 1},
@@ -34,6 +52,9 @@ Point points[] = {
     Point{-0.5, 0.5, 2},
     Point{0.5, -0.5, 2},
     Point{-0.5, -0.5, 2}};
+
+std::vector<size_t> faces[] = {{0, 1, 2}, {1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {0, 2, 6}, {0, 4, 6}, {1, 3, 5}, {5, 3, 7}, {0, 1, 5}, {0, 4, 5}, {3, 7, 6}, {3, 2, 6}};
+
 double angle = 0;
 double dist = 0;
 
@@ -94,6 +115,15 @@ Point *rotate_y(Point *points, size_t count, double angle)
     }
 
     return rotated;
+}
+
+SDL_FPoint project(Point point)
+{
+    SDL_FPoint res;
+
+    res.x = point.x / (point.z + dist);
+    res.y = point.y / (point.z + dist);
+    return screen(res);
 }
 
 SDL_FPoint *project(Point *points, size_t count)
@@ -161,7 +191,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     Uint64 start = SDL_GetTicks();
 
     angle += ((SDL_PI_D * 2) / FPS) * RPS;
-    dist += 0.05;
+    dist += 0.01;
 
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(renderer);
@@ -180,7 +210,36 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
     // std::cout << "points: " << p_count << ", rotated: " << ro_count << ", projected: " << pr_count << ", rects: " << r_count << std::endl;
 
-    SDL_RenderFillRects(renderer, rects, SDL_arraysize(points));
+    // draw as points
+    // SDL_RenderFillRects(renderer, rects, SDL_arraysize(points));
+
+    // draw as lines to create faces
+
+    // don't draw the same line twice
+    std::set<Line> to_draw = {};
+    std::cout << (sizeof(faces) / sizeof(faces[0])) << std::endl;
+    for (int i = 0; i < (sizeof(faces) / sizeof(faces[0])); i++)
+    {
+        std::vector<size_t> f = faces[i];
+
+        for (int j = 0; j < f.size(); i++)
+        {
+            SDL_FPoint start = project(points[f[j]]);
+            SDL_FPoint end = project(points[f[(j + 1) % f.size()]]);
+
+            Line res;
+
+            res.start = start;
+            res.end = end;
+
+            to_draw.insert(res);
+        }
+    }
+
+    for (Line line : to_draw)
+    {
+        SDL_RenderLine(renderer, line.start.x, line.start.y, line.end.x, line.end.y);
+    }
 
     SDL_RenderPresent(renderer);
     Uint64 end = SDL_GetTicks();
