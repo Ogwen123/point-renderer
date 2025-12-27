@@ -3,6 +3,7 @@
 #include <SDL3/SDL_main.h>
 #include <vector>
 #include <iostream>
+#include <cmath>
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
@@ -11,6 +12,7 @@ static SDL_Renderer *renderer = NULL;
 #define WINDOW_HEIGHT 900
 #define FPS 60
 #define POINT_SIZE 30
+#define RPS 1
 
 #define FG_R 0x50
 #define FG_G 0xff
@@ -23,7 +25,17 @@ struct Point
     float z;
 };
 
-Point points[] = {Point{0.5, 0.5, 1}, Point{-0.5, 0.5, 1}, Point{0.5, -0.5, 1}, Point{-0.5, -0.5, 1}, Point{0.5, 0.5, 2}, Point{-0.5, 0.5, 2}, Point{0.5, -0.5, 2}, Point{-0.5, -0.5, 2}};
+Point points[] = {
+    Point{0.5, 0.5, 1},
+    Point{-0.5, 0.5, 1},
+    Point{0.5, -0.5, 1},
+    Point{-0.5, -0.5, 1},
+    Point{0.5, 0.5, 2},
+    Point{-0.5, 0.5, 2},
+    Point{0.5, -0.5, 2},
+    Point{-0.5, -0.5, 2}};
+double angle = 0;
+double dist = 0;
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
@@ -60,6 +72,30 @@ SDL_FPoint screen(SDL_FPoint point)
     return res;
 }
 
+// rotate around the y axis
+Point *rotate_y(Point *points, size_t count, double angle)
+{
+    Point *rotated = new Point[count];
+
+    for (int i = 0; i < count; i++)
+    {
+        Point p = points[i];
+
+        Point res;
+
+        double s = sin(angle);
+        double c = cos(angle);
+
+        res.x = c * p.x - s * p.z;
+        res.y = p.y;
+        res.z = s * p.x + c * p.z;
+
+        rotated[i] = res;
+    }
+
+    return rotated;
+}
+
 SDL_FPoint *project(Point *points, size_t count)
 {
     SDL_FPoint *screen_points = new SDL_FPoint[count];
@@ -69,8 +105,8 @@ SDL_FPoint *project(Point *points, size_t count)
         Point p = points[i];
         SDL_FPoint res;
 
-        res.x = p.x / p.z;
-        res.y = p.y / p.z;
+        res.x = p.x / (p.z + dist);
+        res.y = p.y / (p.z + dist);
         screen_points[i] = screen(res);
         // std::cout << screen_points[i].x << ", " << screen_points[i].y << std::endl;
     }
@@ -124,13 +160,25 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 {
     Uint64 start = SDL_GetTicks();
 
+    angle += ((SDL_PI_D * 2) / FPS) * RPS;
+    dist += 0.05;
+
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 80, 255, 80, SDL_ALPHA_OPAQUE);
 
+    std::cout << angle << std::endl;
+
     size_t p_count = SDL_arraysize(points);
-    SDL_FRect *rects = point_to_rect(project(points, p_count), p_count);
+
+    // Point *rotated = rotate_y(points, p_count, angle);
+    // size_t ro_count = SDL_arraysize(rotated);
+    SDL_FPoint *projected = project(points, p_count);
+    size_t pr_count = SDL_arraysize(projected);
+    SDL_FRect *rects = point_to_rect(projected, p_count);
     size_t r_count = SDL_arraysize(rects);
+
+    // std::cout << "points: " << p_count << ", rotated: " << ro_count << ", projected: " << pr_count << ", rects: " << r_count << std::endl;
 
     SDL_RenderFillRects(renderer, rects, SDL_arraysize(points));
 
