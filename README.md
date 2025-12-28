@@ -11,8 +11,9 @@ git clone https://github.com/ogwen123/point-renderer.git
 cd point-renderer
 git clone https://github.com/libsdl-org/SDL.git vendored/SDL
 mkdir build
+cd build
 cmake ..
-cmake build .
+cmake --build .
 ```
 
 ## TODO
