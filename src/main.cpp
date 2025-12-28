@@ -5,6 +5,10 @@
 #include <set>
 #include <iostream>
 #include <cmath>
+#include <string>
+#include <tuple>
+
+#include "obj.h"
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
@@ -75,6 +79,14 @@ double dist = 3;
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
+    std::string path = "";
+    if (argc == 2)
+    {
+        path = argv[1];
+    }
+
+    ObjData d = obj_from_path(path);
+
     int i;
 
     SDL_SetAppMetadata("Simple 3D Renderer", "1.0", "org.eu.ogwen.point-renderer");
