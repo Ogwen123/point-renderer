@@ -17,7 +17,7 @@ static SDL_Renderer *renderer = NULL;
 #define WINDOW_HEIGHT 900
 #define FPS 60
 #define POINT_SIZE 30
-#define RPS 0.2
+#define RPS 0.1
 
 #define FG_R 0x50
 #define FG_G 0xff
@@ -60,19 +60,21 @@ std::vector<Point> points = {
     Point{-0.5, -0.5, 0.5}};
 
 // std::vector<size_t> faces[] = {{0, 1, 2}, {1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {0, 2, 6}, {0, 4, 6}, {1, 3, 5}, {5, 3, 7}, {0, 1, 5}, {0, 4, 5}, {3, 7, 6}, {3, 2, 6}};
-std::vector<Face> faces = {
-    {1, 0},
-    {1, 3},
-    {1, 5},
-    {0, 4},
-    {0, 2},
-    {2, 6},
-    {2, 3},
-    {5, 4},
-    {4, 6},
-    {6, 7},
-    {7, 5},
-    {3, 7}};
+// std::vector<Face> faces = {
+//     {1, 0},
+//     {1, 3},
+//     {1, 5},
+//     {0, 4},
+//     {0, 2},
+//     {2, 6},
+//     {2, 3},
+//     {5, 4},
+//     {4, 6},
+//     {6, 7},
+//     {7, 5},
+//     {3, 7}};
+
+std::vector<Face> faces = {{1, 0, 2, 3}, {0, 4, 6, 2}, {5, 1, 3, 7}, {5, 4, 0, 1}, {3, 2, 6, 7}, {5, 4, 6, 7}};
 
 double angle = 0;
 double dist = 3;
@@ -231,7 +233,6 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             to_draw.insert(res);
         }
     }
-
     for (Line line : to_draw)
     {
         SDL_RenderLine(renderer, line.start.x, line.start.y, line.end.x, line.end.y);
