@@ -4,38 +4,45 @@
 #include <iostream>
 #include <vector>
 #include <tuple>
+#include <stdexcept>
 
 RawObjFace take_face_data(std::string face_string)
 {
     std::string buf;
 
     RawObjFace face = {};
+    bool adding = false;
     bool take = true;
 
     for (char c : face_string)
     {
-        while (true)
-        { // skip the string at the start of the line that denotes the type
+
+        if (adding)
+        {
             if (c == ' ')
             {
-                break;
+                take = true;
+                if (buf.length() > 0)
+                    face.emplace_back(buf);
+                buf = "";
             }
-        }
-
-        if (c == ' ')
-        {
-            take = true;
-            face.emplace_back(buf);
-            buf = "";
-        }
-        else if (c == '/') // only take the number before the first slash
-        {
-            take = false;
+            else if (c == '/') // only take the number before the first slash
+            {
+                take = false;
+            }
+            else
+            {
+                if (take)
+                    buf.push_back(c);
+            }
         }
         else
         {
-            if (take)
-                buf.push_back(c);
+            // skip the string at the start of the line that denotes the type
+            if (c == ' ')
+            {
+                adding = true;
+            }
         }
     }
 
@@ -47,24 +54,29 @@ RawObjVertex take_vert_data(std::string vert_string)
     std::string buf;
 
     RawObjVertex vert = {};
+    bool adding = false;
 
     for (char c : vert_string)
     {
-        while (true)
-        { // skip the string at the start of the line that denotes the type
+        if (adding)
+        {
             if (c == ' ')
             {
-                break;
+                if (buf.length() > 0)
+                    vert.emplace_back(buf);
             }
-        }
-
-        if (c == ' ')
-        {
-            vert.emplace_back(buf);
+            else
+            {
+                buf.push_back(c);
+            }
         }
         else
         {
-            buf.push_back(c);
+            // skip the string at the start of the line that denotes the type
+            if (c == ' ')
+            {
+                adding = true;
+            }
         }
     }
 
@@ -78,20 +90,30 @@ RawObjData load(std::string rel_path)
     std::vector<RawObjVertex> verts = {};
 
     std::ifstream file(rel_path);
+
+    if (!file.is_open())
+    {
+        // std::cout << "Could not open file with path provided." << std::endl;
+        throw std::invalid_argument("Could not open file with path provided.");
+    }
+    int l = 0;
     std::string str;
     while (std::getline(file, str))
     {
         // only need to take faces and vertices
         if (str.substr(0, 1) == "f")
         {
+            // std::cout << " face";
             faces.emplace_back(take_face_data(str));
         }
         else if (str.substr(0, 2) == "v ")
         {
+            // std::cout << " vert";
             verts.emplace_back(take_vert_data(str));
         }
+        // std::cout << std::endl;
     }
-
+    file.close();
     return std::tuple<std::vector<RawObjFace>, std::vector<RawObjVertex>>{faces, verts};
 }
 
@@ -102,8 +124,31 @@ ObjData normalise(ObjData data) { return {}; }
 
 ObjData obj_from_path(std::string path)
 {
-    std::cout << path << std::endl;
-    RawObjData raw = load(path);
+    // std::cout << path << std::endl;
+    RawObjData raw;
 
-    return {};
+    try
+    {
+        // std::cout << "loading" << std::endl;
+        raw = load(path);
+    }
+    catch (const std::invalid_argument &e)
+    {
+        throw e;
+    }
+    // std::cout << "loaded" << std::endl;
+    std::vector<RawObjFace> faces = std::get<0>(raw);
+
+    // for (auto face : faces)
+    // {
+    //     for (auto point : face)
+    //     {
+    //         std::cout << point << ", ";
+    //     }
+    //     std::cout << std::endl;
+    // }
+
+    ObjData parsed = parse(raw);
+
+    return normalise(parsed);
 }

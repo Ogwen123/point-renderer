@@ -7,6 +7,7 @@
 #include <cmath>
 #include <string>
 #include <tuple>
+#include <stdexcept>
 
 #include "obj.h"
 
@@ -87,7 +88,20 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         path = argv[1];
     }
 
-    ObjData d = obj_from_path(path);
+    ObjData d;
+    try
+    {
+        d = obj_from_path(path);
+    }
+    catch (std::invalid_argument &e)
+    {
+        std::cout << "[ERROR] " << e.what() << std::endl;
+        return SDL_APP_FAILURE;
+    }
+    catch (...)
+    {
+        std::cout << "Encountered unspecified error" << std::endl;
+    }
 
     int i;
 
