@@ -4,6 +4,9 @@
 #include <vector>
 #include <tuple>
 #include <string>
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
 
 typedef std::vector<std::string> RawObjFace;
 typedef std::vector<std::string> RawObjVertex;

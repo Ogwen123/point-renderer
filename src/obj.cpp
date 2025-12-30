@@ -1,10 +1,4 @@
 #include "obj.h"
-#include <fstream>
-#include <string>
-#include <iostream>
-#include <vector>
-#include <tuple>
-#include <stdexcept>
 
 ObjData::ObjData() {}
 ObjData::ObjData(std::string path)
