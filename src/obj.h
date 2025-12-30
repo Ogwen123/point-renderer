@@ -11,7 +11,6 @@ typedef std::tuple<std::vector<RawObjFace>, std::vector<RawObjVertex>> RawObjDat
 
 typedef std::vector<double> ObjFace;
 typedef std::vector<double> ObjVertex;
-typedef std::tuple<ObjFace, ObjVertex> ObjData;
 
 class ObjData
 {
@@ -19,6 +18,7 @@ public:
     std::vector<ObjFace> faces;
     std::vector<ObjVertex> vertices;
     ObjData(std::string path);
+    ObjData();
 
     static RawObjFace take_face_data(std::string face_string);
     static RawObjVertex take_vert_data(std::string vert_string);

@@ -10,6 +10,7 @@
 #include <stdexcept>
 
 #include "obj.h"
+#include "point.h"
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
@@ -18,25 +19,13 @@ static SDL_Renderer *renderer = NULL;
 #define WINDOW_HEIGHT 900
 #define FPS 60
 #define POINT_SIZE 30
-#define RPS 0.1
+#define RPS 0.5
 
 #define FG_R 0x50
 #define FG_G 0xff
 #define FG_B 0x50
 
 typedef std::vector<size_t> Face;
-
-class Point
-{
-public:
-    float x;
-    float y;
-    float z;
-    Point rotate_x(double angle);
-    Point rotate_y(double angle);
-    Point rotate_z(double angle);
-    SDL_FPoint project();
-};
 
 struct Line
 {
@@ -95,7 +84,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 
         try
         {
-            d = obj_from_path(path);
+            d = ObjData(path);
         }
         catch (std::invalid_argument &e)
         {
@@ -138,60 +127,6 @@ SDL_FPoint screen(SDL_FPoint point)
 
     // std::cout << point.x << ", " << point.y << ", " << res.x << ", " << res.y << std::endl;
 
-    return res;
-}
-
-// rotate around the y axis
-Point Point::rotate_x(double angle)
-{
-    Point res;
-
-    double s = sin(angle);
-    double c = cos(angle);
-
-    res.x = x;
-    res.y = c * y - s * z;
-    res.z = s * y + c * z;
-
-    return res;
-}
-
-// rotate around the y axis
-Point Point::rotate_y(double angle)
-{
-    Point res;
-
-    double s = sin(angle);
-    double c = cos(angle);
-
-    res.x = c * x - s * z;
-    res.y = y;
-    res.z = s * x + c * z;
-
-    return res;
-}
-
-// rotate around the y axis
-Point Point::rotate_z(double angle)
-{
-    Point res;
-
-    double s = sin(angle);
-    double c = cos(angle);
-
-    res.x = c * x - s * y;
-    res.y = s * x + c * y;
-    res.z = z;
-
-    return res;
-}
-
-SDL_FPoint Point::project()
-{
-    SDL_FPoint res;
-
-    res.x = x / (z + dist);
-    res.y = y / (z + dist);
     return res;
 }
 
@@ -241,8 +176,8 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             Point start_point = points[f[j]];
             Point end_point = points[f[(j + 1) % f.size()]];
 
-            SDL_FPoint start = screen(start_point.rotate_y(angle).project());
-            SDL_FPoint end = screen(end_point.rotate_y(angle).project());
+            SDL_FPoint start = screen(start_point.rotate_y(angle).project(dist));
+            SDL_FPoint end = screen(end_point.rotate_y(angle).project(dist));
 
             Line res;
 
