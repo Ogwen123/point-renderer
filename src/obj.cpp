@@ -6,7 +6,38 @@
 #include <tuple>
 #include <stdexcept>
 
-RawObjFace take_face_data(std::string face_string)
+ObjData::ObjData(std::string path)
+{
+    // std::cout << path << std::endl;
+    RawObjData raw;
+
+    try
+    {
+        // std::cout << "loading" << std::endl;
+        raw = load(path);
+    }
+    catch (const std::invalid_argument &e)
+    {
+        throw e;
+    }
+    // std::cout << "loaded" << std::endl;
+    std::vector<RawObjFace> faces = std::get<0>(raw);
+
+    // for (auto face : faces)
+    // {
+    //     for (auto point : face)
+    //     {
+    //         std::cout << point << ", ";
+    //     }
+    //     std::cout << std::endl;
+    // }
+
+    parse(raw);
+
+    normalise();
+}
+
+RawObjFace ObjData::take_face_data(std::string face_string)
 {
     std::string buf;
 
@@ -49,7 +80,7 @@ RawObjFace take_face_data(std::string face_string)
     return face;
 }
 
-RawObjVertex take_vert_data(std::string vert_string)
+RawObjVertex ObjData::take_vert_data(std::string vert_string)
 {
     std::string buf;
 
@@ -83,7 +114,12 @@ RawObjVertex take_vert_data(std::string vert_string)
     return vert;
 }
 
-RawObjData load(std::string rel_path)
+// safely convert the string values to doubles
+void ObjData::parse(RawObjData raw_data) {}
+// normalise the values to fit in the -1...1 coord range being used
+void ObjData::normalise() {}
+
+RawObjData ObjData::load(std::string rel_path)
 {
 
     std::vector<RawObjFace> faces = {};
@@ -104,51 +140,15 @@ RawObjData load(std::string rel_path)
         if (str.substr(0, 1) == "f")
         {
             // std::cout << " face";
-            faces.emplace_back(take_face_data(str));
+            faces.emplace_back(ObjData::take_face_data(str));
         }
         else if (str.substr(0, 2) == "v ")
         {
             // std::cout << " vert";
-            verts.emplace_back(take_vert_data(str));
+            verts.emplace_back(ObjData::take_vert_data(str));
         }
         // std::cout << std::endl;
     }
     file.close();
     return std::tuple<std::vector<RawObjFace>, std::vector<RawObjVertex>>{faces, verts};
-}
-
-// safely convert the string values to doubles
-ObjData parse(RawObjData raw_data) { return {}; }
-// normalise the values to fit in the -1...1 coord range being used
-ObjData normalise(ObjData data) { return {}; }
-
-ObjData obj_from_path(std::string path)
-{
-    // std::cout << path << std::endl;
-    RawObjData raw;
-
-    try
-    {
-        // std::cout << "loading" << std::endl;
-        raw = load(path);
-    }
-    catch (const std::invalid_argument &e)
-    {
-        throw e;
-    }
-    // std::cout << "loaded" << std::endl;
-    std::vector<RawObjFace> faces = std::get<0>(raw);
-
-    // for (auto face : faces)
-    // {
-    //     for (auto point : face)
-    //     {
-    //         std::cout << point << ", ";
-    //     }
-    //     std::cout << std::endl;
-    // }
-
-    ObjData parsed = parse(raw);
-
-    return normalise(parsed);
 }

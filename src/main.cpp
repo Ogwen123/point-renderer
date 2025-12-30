@@ -26,11 +26,16 @@ static SDL_Renderer *renderer = NULL;
 
 typedef std::vector<size_t> Face;
 
-struct Point
+class Point
 {
+public:
     float x;
     float y;
     float z;
+    Point rotate_x(double angle);
+    Point rotate_y(double angle);
+    Point rotate_z(double angle);
+    SDL_FPoint project();
 };
 
 struct Line
@@ -83,24 +88,24 @@ double dist = 3;
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
     std::string path = "";
+    ObjData d;
     if (argc == 2)
     {
         path = argv[1];
-    }
 
-    ObjData d;
-    try
-    {
-        d = obj_from_path(path);
-    }
-    catch (std::invalid_argument &e)
-    {
-        std::cout << "[ERROR] " << e.what() << std::endl;
-        return SDL_APP_FAILURE;
-    }
-    catch (...)
-    {
-        std::cout << "Encountered unspecified error" << std::endl;
+        try
+        {
+            d = obj_from_path(path);
+        }
+        catch (std::invalid_argument &e)
+        {
+            std::cout << "[ERROR] " << e.what() << std::endl;
+            return SDL_APP_FAILURE;
+        }
+        catch (...)
+        {
+            std::cout << "Encountered unspecified error" << std::endl;
+        }
     }
 
     int i;
@@ -137,56 +142,56 @@ SDL_FPoint screen(SDL_FPoint point)
 }
 
 // rotate around the y axis
-Point rotate_x(Point p, double angle)
+Point Point::rotate_x(double angle)
 {
     Point res;
 
     double s = sin(angle);
     double c = cos(angle);
 
-    res.x = p.x;
-    res.y = c * p.y - s * p.z;
-    res.z = s * p.y + c * p.z;
+    res.x = x;
+    res.y = c * y - s * z;
+    res.z = s * y + c * z;
 
     return res;
 }
 
 // rotate around the y axis
-Point rotate_y(Point p, double angle)
+Point Point::rotate_y(double angle)
 {
     Point res;
 
     double s = sin(angle);
     double c = cos(angle);
 
-    res.x = c * p.x - s * p.z;
-    res.y = p.y;
-    res.z = s * p.x + c * p.z;
+    res.x = c * x - s * z;
+    res.y = y;
+    res.z = s * x + c * z;
 
     return res;
 }
 
 // rotate around the y axis
-Point rotate_z(Point p, double angle)
+Point Point::rotate_z(double angle)
 {
     Point res;
 
     double s = sin(angle);
     double c = cos(angle);
 
-    res.x = c * p.x - s * p.y;
-    res.y = s * p.x + c * p.y;
-    res.z = p.z;
+    res.x = c * x - s * y;
+    res.y = s * x + c * y;
+    res.z = z;
 
     return res;
 }
 
-SDL_FPoint project(Point point)
+SDL_FPoint Point::project()
 {
     SDL_FPoint res;
 
-    res.x = point.x / (point.z + dist);
-    res.y = point.y / (point.z + dist);
+    res.x = x / (z + dist);
+    res.y = y / (z + dist);
     return res;
 }
 
@@ -236,8 +241,8 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             Point start_point = points[f[j]];
             Point end_point = points[f[(j + 1) % f.size()]];
 
-            SDL_FPoint start = screen(project(rotate_y(start_point, angle)));
-            SDL_FPoint end = screen(project(rotate_y(end_point, angle)));
+            SDL_FPoint start = screen(start_point.rotate_y(angle).project());
+            SDL_FPoint end = screen(end_point.rotate_y(angle).project());
 
             Line res;
 
