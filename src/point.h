@@ -7,10 +7,14 @@
 
 class Point
 {
-public:
+private:
     float x;
     float y;
     float z;
+
+public:
+    Point();
+    Point(double x, double y, double z);
     Point rotate_x(double angle);
     Point rotate_y(double angle);
     Point rotate_z(double angle);

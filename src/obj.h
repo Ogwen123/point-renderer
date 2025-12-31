@@ -9,11 +9,13 @@
 #include <stdexcept>
 #include <format>
 
+#include "types.h"
+#include "point.h"
+
 typedef std::vector<std::string> RawObjFace;
 typedef std::vector<std::string> RawObjVertex;
 typedef std::tuple<std::vector<RawObjFace>, std::vector<RawObjVertex>> RawObjData;
 
-typedef std::vector<double> ObjFace;
 typedef std::vector<double> ObjVertex;
 
 class parse_error : public std::runtime_error
@@ -26,10 +28,12 @@ public:
 class ObjData
 {
 public:
-    std::vector<ObjFace> faces;
+    std::vector<Face> faces;
     std::vector<ObjVertex> vertices;
     ObjData(std::string path);
     ObjData();
+
+    static RawObjData load(std::string rel_path);
 
     static RawObjFace take_face_data(std::string face_string);
     static RawObjVertex take_vert_data(std::string vert_string);
@@ -39,7 +43,7 @@ public:
     // normalise the values to fit in the -1...1 coord range being used
     void normalise();
 
-    static RawObjData load(std::string rel_path);
+    std::vector<Point> vertex_data();
 };
 
 #endif

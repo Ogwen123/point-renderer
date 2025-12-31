@@ -11,6 +11,7 @@
 
 #include "obj.h"
 #include "point.h"
+#include "types.h"
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
@@ -24,8 +25,6 @@ static SDL_Renderer *renderer = NULL;
 #define FG_R 0x50
 #define FG_G 0xff
 #define FG_B 0x50
-
-typedef std::vector<size_t> Face;
 
 struct Line
 {
@@ -95,6 +94,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         {
             std::cout << "Encountered unspecified error" << std::endl;
         }
+
+        points = d.vertex_data();
+        faces = d.faces;
+        std::cout << "Finished loading .obj" << std::endl;
     }
 
     int i;
@@ -153,6 +156,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
+    std::cout << "starting frame" << std::endl;
     Uint64 start = SDL_GetTicks();
 
     angle += ((SDL_PI_D * 2) / FPS) * RPS;
@@ -167,10 +171,8 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
     // don't draw the same line twice
     std::set<Line> to_draw = {};
-    for (int i = 0; i < faces.size(); i++)
+    for (auto f : faces)
     {
-        Face f = faces[i];
-
         for (int j = 0; j < f.size(); j++)
         {
             Point start_point = points[f[j]];

@@ -28,19 +28,10 @@ ObjData::ObjData(std::string path)
     std::cout << "\033[32m[DONE]\033[39m" << std::endl;
     std::vector<RawObjFace> faces = std::get<0>(raw);
 
-    // for (auto face : faces)
-    // {
-    //     for (auto point : face)
-    //     {
-    //         std::cout << point << ", ";
-    //     }
-    //     std::cout << std::endl;
-    // }
-
     try
     {
         std::cout << "Parsing ";
-        parse(raw);
+        this->parse(raw);
     }
     catch (const std::invalid_argument &e)
     {
@@ -52,14 +43,14 @@ ObjData::ObjData(std::string path)
     try
     {
         std::cout << "Normalising Coordinates ";
-        normalise();
+        this->normalise();
     }
     catch (const std::invalid_argument &e)
     {
         std::cout << "\033[31m[FAIL]\033[39m" << std::endl;
         throw e;
     }
-    std::cout << "\033[36m[WIP]\033[39m" << std::endl;
+    std::cout << "\033[32m[DONE]\033[39m" << std::endl;
 }
 
 RawObjFace ObjData::take_face_data(std::string face_string)
@@ -70,7 +61,7 @@ RawObjFace ObjData::take_face_data(std::string face_string)
     bool adding = false;
     bool take = true;
 
-    for (char c : face_string)
+    for (auto c : face_string)
     {
 
         if (adding)
@@ -116,7 +107,7 @@ RawObjVertex ObjData::take_vert_data(std::string vert_string)
     RawObjVertex vert = {};
     bool adding = false;
 
-    for (char c : vert_string)
+    for (auto c : vert_string)
     {
         if (adding)
         {
@@ -162,22 +153,19 @@ RawObjData ObjData::load(std::string rel_path)
         // std::cout << "Could not open file with path provided." << std::endl;
         throw std::invalid_argument("Could not open file with path provided.");
     }
-    int l = 0;
+
     std::string str;
     while (std::getline(file, str))
     {
         // only need to take faces and vertices
         if (str.substr(0, 1) == "f")
         {
-            // std::cout << " face";
             faces.emplace_back(ObjData::take_face_data(str));
         }
         else if (str.substr(0, 2) == "v ")
         {
-            // std::cout << " vert";
             verts.emplace_back(ObjData::take_vert_data(str));
         }
-        // std::cout << std::endl;
     }
 
     // for (auto vert : verts)
@@ -204,13 +192,13 @@ RawObjData ObjData::load(std::string rel_path)
     return std::tuple<std::vector<RawObjFace>, std::vector<RawObjVertex>>{faces, verts};
 }
 
-// safely convert the string values to doubles
+// convert the string values to doubles with error handling
 void ObjData::parse(RawObjData raw_data)
 {
     std::vector<RawObjFace> raw_faces = std::get<0>(raw_data);
     std::vector<RawObjVertex> raw_verts = std::get<1>(raw_data);
 
-    std::vector<ObjFace> faces = {};
+    std::vector<Face> faces = {};
     std::vector<ObjVertex> verts = {};
 
     for (auto raw_vert : raw_verts)
@@ -231,12 +219,12 @@ void ObjData::parse(RawObjData raw_data)
 
     for (auto raw_face : raw_faces)
     {
-        ObjFace face = {};
+        Face face = {};
         for (auto point : raw_face)
         {
             try
             {
-                face.emplace_back(std::stod(point));
+                face.emplace_back(std::stoi(point));
             }
             catch (std::invalid_argument &e)
             {
@@ -249,4 +237,47 @@ void ObjData::parse(RawObjData raw_data)
     this->vertices = verts;
 }
 // normalise the values to fit in the -1...1 coord range being used
-void ObjData::normalise() {}
+void ObjData::normalise()
+{
+    // divide every point by the largest x, y, or z coordinate so every coord is <= 1
+
+    double max = 0;
+
+    for (auto vert : this->vertices)
+    {
+        for (auto point : vert)
+        {
+            if (abs(point) > max)
+            {
+                max = abs(point);
+            }
+        }
+    }
+
+    for (int i = 0; i < this->vertices.size(); i++)
+    {
+        ObjVertex temp = {};
+        for (auto point : this->vertices[i])
+        {
+            temp.emplace_back(point / max);
+        }
+        this->vertices[i] = temp;
+    }
+}
+
+std::vector<Point> ObjData::vertex_data()
+{
+    std::vector<Point> points = {};
+
+    for (auto vert : this->vertices)
+    {
+        if (vert.size() != 3)
+        {
+            throw parse_error("found vertex from obj file that does not have x, y and z components");
+        }
+
+        points.emplace_back(Point(vert[0], vert[1], vert[2]));
+    }
+
+    return points;
+}
