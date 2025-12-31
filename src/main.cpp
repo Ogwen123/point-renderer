@@ -97,6 +97,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 
         points = d.vertex_data();
         faces = d.faces;
+
+        std::cout << points.size() << std::endl;
+
         std::cout << "Finished loading .obj" << std::endl;
     }
 
@@ -156,7 +159,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
-    std::cout << "starting frame" << std::endl;
     Uint64 start = SDL_GetTicks();
 
     angle += ((SDL_PI_D * 2) / FPS) * RPS;
@@ -171,15 +173,17 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
     // don't draw the same line twice
     std::set<Line> to_draw = {};
+
     for (auto f : faces)
     {
         for (int j = 0; j < f.size(); j++)
         {
+
             Point start_point = points[f[j]];
             Point end_point = points[f[(j + 1) % f.size()]];
 
-            SDL_FPoint start = screen(start_point.rotate_y(angle).project(dist));
-            SDL_FPoint end = screen(end_point.rotate_y(angle).project(dist));
+            SDL_FPoint start = screen(start_point.rotate_x(angle).project(dist));
+            SDL_FPoint end = screen(end_point.rotate_x(angle).project(dist));
 
             Line res;
 

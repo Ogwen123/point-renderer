@@ -18,4 +18,5 @@ cmake --build .
 
 ## TODO
 
--   [ ] load and display wavefont OBJ files
+-   [x] load and display wavefont OBJ files
+    -   [ ] add function to center models so they rotate correctly

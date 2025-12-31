@@ -6,6 +6,8 @@ project(renderer)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 set(CMAKE_CXX_STANDARD "20")
+set(DCMAKE_CXX_COMPILER "C:/msys64/ucrt64/bin/g++.exe")
+set(CMAKE_C_COMPILER "C:/msys64/ucrt64/bin/gcc.exe")
 
 # This assumes the SDL source is available in vendored/SDL
 add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)

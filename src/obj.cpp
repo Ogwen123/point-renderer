@@ -215,6 +215,7 @@ void ObjData::parse(RawObjData raw_data)
                 throw parse_error(std::format("could not parse %s into a string", point).c_str());
             }
         }
+        verts.emplace_back(vert);
     }
 
     for (auto raw_face : raw_faces)
@@ -224,13 +225,14 @@ void ObjData::parse(RawObjData raw_data)
         {
             try
             {
-                face.emplace_back(std::stoi(point));
+                face.emplace_back(std::stoi(point) - 1); // obj files are 1 indexed so we subtract 1 here to make them 0 indexed
             }
             catch (std::invalid_argument &e)
             {
                 throw parse_error(std::format("could not parse %s into a string", point).c_str());
             }
         }
+        faces.emplace_back(face);
     }
 
     this->faces = faces;
@@ -242,7 +244,7 @@ void ObjData::normalise()
     // divide every point by the largest x, y, or z coordinate so every coord is <= 1
 
     double max = 0;
-
+    std::cout << this->vertices.size() << std::endl;
     for (auto vert : this->vertices)
     {
         for (auto point : vert)
@@ -250,10 +252,10 @@ void ObjData::normalise()
             if (abs(point) > max)
             {
                 max = abs(point);
+                std::cout << max << std::endl;
             }
         }
     }
-
     for (int i = 0; i < this->vertices.size(); i++)
     {
         ObjVertex temp = {};
