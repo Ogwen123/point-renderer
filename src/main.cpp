@@ -19,7 +19,7 @@ static SDL_Renderer *renderer = NULL;
 #define WINDOW_HEIGHT 900
 #define FPS 60
 #define POINT_SIZE 30
-#define RPS 0.5
+#define RPS 0.2
 
 #define FG_R 0x50
 #define FG_G 0xff

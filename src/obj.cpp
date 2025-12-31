@@ -1,6 +1,16 @@
 #include "obj.h"
 
-ObjData::ObjData() {}
+parse_error::parse_error(char const *const message) noexcept : std::runtime_error(message)
+{
+}
+const char *parse_error::what() const noexcept
+{
+    return std::runtime_error::what();
+}
+
+ObjData::ObjData()
+{
+}
 ObjData::ObjData(std::string path)
 {
     std::cout << path << std::endl;
@@ -49,7 +59,7 @@ ObjData::ObjData(std::string path)
         std::cout << "\033[31m[FAIL]\033[39m" << std::endl;
         throw e;
     }
-    std::cout << "\033[32m[DONE]\033[39m" << std::endl;
+    std::cout << "\033[36m[WIP]\033[39m" << std::endl;
 }
 
 RawObjFace ObjData::take_face_data(std::string face_string)
@@ -114,6 +124,7 @@ RawObjVertex ObjData::take_vert_data(std::string vert_string)
             {
                 if (buf.length() > 0)
                     vert.emplace_back(buf);
+                buf = "";
             }
             else
             {
@@ -168,11 +179,74 @@ RawObjData ObjData::load(std::string rel_path)
         }
         // std::cout << std::endl;
     }
+
+    // for (auto vert : verts)
+    // {
+    //     std::cout << "vert: ";
+    //     for (auto p : vert)
+    //     {
+    //         std::cout << p << "   ";
+    //     }
+    //     std::cout << std::endl;
+    // }
+
+    // for (auto face : faces)
+    // {
+    //     std::cout << "face: ";
+    //     for (auto p : face)
+    //     {
+    //         std::cout << p << "   ";
+    //     }
+    //     std::cout << std::endl;
+    // }
+
     file.close();
     return std::tuple<std::vector<RawObjFace>, std::vector<RawObjVertex>>{faces, verts};
 }
 
 // safely convert the string values to doubles
-void ObjData::parse(RawObjData raw_data) {}
+void ObjData::parse(RawObjData raw_data)
+{
+    std::vector<RawObjFace> raw_faces = std::get<0>(raw_data);
+    std::vector<RawObjVertex> raw_verts = std::get<1>(raw_data);
+
+    std::vector<ObjFace> faces = {};
+    std::vector<ObjVertex> verts = {};
+
+    for (auto raw_vert : raw_verts)
+    {
+        ObjVertex vert = {};
+        for (auto point : raw_vert)
+        {
+            try
+            {
+                vert.emplace_back(std::stod(point));
+            }
+            catch (std::invalid_argument &e)
+            {
+                throw parse_error(std::format("could not parse %s into a string", point).c_str());
+            }
+        }
+    }
+
+    for (auto raw_face : raw_faces)
+    {
+        ObjFace face = {};
+        for (auto point : raw_face)
+        {
+            try
+            {
+                face.emplace_back(std::stod(point));
+            }
+            catch (std::invalid_argument &e)
+            {
+                throw parse_error(std::format("could not parse %s into a string", point).c_str());
+            }
+        }
+    }
+
+    this->faces = faces;
+    this->vertices = verts;
+}
 // normalise the values to fit in the -1...1 coord range being used
 void ObjData::normalise() {}

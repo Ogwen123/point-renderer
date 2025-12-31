@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include <format>
 
 typedef std::vector<std::string> RawObjFace;
 typedef std::vector<std::string> RawObjVertex;
@@ -14,6 +15,13 @@ typedef std::tuple<std::vector<RawObjFace>, std::vector<RawObjVertex>> RawObjDat
 
 typedef std::vector<double> ObjFace;
 typedef std::vector<double> ObjVertex;
+
+class parse_error : public std::runtime_error
+{
+public:
+    parse_error(char const *const message) throw();
+    virtual char const *what() const throw();
+};
 
 class ObjData
 {
