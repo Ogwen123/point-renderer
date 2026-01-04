@@ -70,8 +70,9 @@ std::vector<Point> points = {
 
 std::vector<Face> faces = {{1, 0, 2, 3}, {0, 4, 6, 2}, {5, 1, 3, 7}, {5, 4, 0, 1}, {3, 2, 6, 7}, {5, 4, 6, 7}};
 
-double angle = 0;
-double dist = 3;
+double x_angle = 0;
+double y_angle = 0;
+double dist = 2;
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
@@ -161,8 +162,6 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 {
     Uint64 start = SDL_GetTicks();
 
-    angle += ((SDL_PI_D * 2) / FPS) * RPS;
-
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 80, 255, 80, SDL_ALPHA_OPAQUE);
@@ -182,8 +181,8 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             Point start_point = points[f[j]];
             Point end_point = points[f[(j + 1) % f.size()]];
 
-            SDL_FPoint start = screen(start_point.rotate_x(angle).project(dist));
-            SDL_FPoint end = screen(end_point.rotate_x(angle).project(dist));
+            SDL_FPoint start = screen(start_point.rotate_x(x_angle).project(dist));
+            SDL_FPoint end = screen(end_point.rotate_x(x_angle).project(dist));
 
             Line res;
 

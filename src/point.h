@@ -15,9 +15,9 @@ private:
 public:
     Point();
     Point(double x, double y, double z);
-    Point rotate_x(double angle);
-    Point rotate_y(double angle);
-    Point rotate_z(double angle);
+    void rotate_x(double angle);
+    void rotate_y(double angle);
+    void rotate_z(double angle);
     SDL_FPoint project(double dist);
 };
 
