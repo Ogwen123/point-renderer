@@ -8,6 +8,7 @@
 #include <string>
 #include <tuple>
 #include <stdexcept>
+#include <algorithm>
 
 #include "obj.h"
 #include "point.h"
@@ -22,6 +23,10 @@ static SDL_Renderer *renderer = NULL;
 #define POINT_SIZE 30
 #define RPS 0.2
 
+#define MIN_ZOOM 1
+#define MAX_ZOOM 10
+#define ZOOM_SENS 0.4
+
 #define FG_R 0x50
 #define FG_G 0xff
 #define FG_B 0x50
@@ -30,6 +35,12 @@ struct Line
 {
     SDL_FPoint start;
     SDL_FPoint end;
+};
+
+struct MousePos
+{
+    float x;
+    float y;
 };
 
 bool operator<(const Line &lhs, const Line &rhs)
@@ -72,7 +83,18 @@ std::vector<Face> faces = {{1, 0, 2, 3}, {0, 4, 6, 2}, {5, 1, 3, 7}, {5, 4, 0, 1
 
 double x_angle = SDL_PI_F / 6;
 double y_angle = SDL_PI_F / 3;
-double dist = 2;
+double dist = 1;
+MousePos pos = MousePos{0, 0};
+
+void update_pos(MousePos *pos)
+{
+    float x = 0;
+    float y = 0;
+
+    SDL_GetMouseState(&x, &y);
+
+    *pos = MousePos{x, y};
+}
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
@@ -149,12 +171,47 @@ SDL_FRect point_to_rect(SDL_FPoint p)
     return res;
 }
 
+void handle_drag()
+{
+    MousePos old = pos;
+
+    update_pos(&pos);
+
+    SDL_MouseButtonFlags mouse_flags = SDL_GetMouseState(nullptr, nullptr);
+    bool left_down = mouse_flags & 0x1;
+
+    if (left_down)
+    {
+        MousePos delta = MousePos{pos.x - old.x, pos.y - old.y};
+
+        y_angle -= delta.x * (SDL_PI_F / 360); // 1 degree per pixel dragged
+        x_angle -= delta.y * (SDL_PI_F / 360);
+    }
+}
+
+void handle_zoom(SDL_MouseWheelEvent event)
+{
+    // negative zooms in
+    // positive zooms out
+    float delta = event.y;
+
+    dist = std::min(std::max(dist + (delta * 0.4), (double)MIN_ZOOM), (double)MAX_ZOOM);
+}
+
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 {
-    if (event->type == SDL_EVENT_QUIT)
+    switch (event->type)
     {
+    case SDL_EVENT_QUIT:
         return SDL_APP_SUCCESS;
+    case SDL_EVENT_MOUSE_MOTION:
+        handle_drag();
+        return SDL_APP_CONTINUE;
+    case SDL_EVENT_MOUSE_WHEEL:
+        handle_zoom(event->wheel);
+        return SDL_APP_CONTINUE;
     }
+
     return SDL_APP_CONTINUE;
 }
 
@@ -168,10 +225,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
     size_t p_count = SDL_arraysize(points);
 
-    // draw triangles from the faces array
-
-    // don't draw the same line twice
-    std::set<Line> to_draw = {};
+    std::set<Line> to_draw = {}; // don't draw the same line twice
 
     for (auto f : faces)
     {
