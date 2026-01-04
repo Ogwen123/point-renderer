@@ -8,37 +8,49 @@ Point::Point(double x, double y, double z)
     this->z = z;
 }
 
-// rotate around the y axis
-void Point::rotate_x(double angle)
+// rotate around the x axis
+Point &Point::rotate_x(double angle)
 {
     double s = sin(angle);
     double c = cos(angle);
 
-    this->x = this->x;
-    this->y = c * this->y - s * this->z;
-    this->z = s * this->y + c * this->z;
+    double temp_y = this->y;
+    double temp_z = this->z;
+
+    this->y = c * temp_y - s * temp_z;
+    this->z = s * temp_y + c * temp_z;
+
+    return *this;
 }
 
 // rotate around the y axis
-void Point::rotate_y(double angle)
+Point &Point::rotate_y(double angle)
 {
     double s = sin(angle);
     double c = cos(angle);
 
-    this->x = c * this->x - s * this->z;
-    this->y = this->y;
-    this->z = s * this->x + c * this->z;
+    double temp_x = this->x;
+    double temp_z = this->z;
+
+    this->x = c * temp_x + s * temp_z;
+    this->z = -s * temp_x + c * temp_z;
+
+    return *this;
 }
 
-// rotate around the y axis
-void Point::rotate_z(double angle)
+// rotate around the z axis
+Point &Point::rotate_z(double angle)
 {
     double s = sin(angle);
     double c = cos(angle);
 
-    this->x = c * this->x - s * this->y;
-    this->y = s * this->x + c * this->y;
-    this->z = this->z;
+    double temp_x = this->x;
+    double temp_y = this->y;
+
+    this->x = c * temp_x - s * temp_y;
+    this->y = s * temp_x + c * temp_y;
+
+    return *this;
 }
 
 SDL_FPoint Point::project(double dist)

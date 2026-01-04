@@ -15,10 +15,13 @@ private:
 public:
     Point();
     Point(double x, double y, double z);
-    void rotate_x(double angle);
-    void rotate_y(double angle);
-    void rotate_z(double angle);
+    Point &rotate_x(double angle);
+    Point &rotate_y(double angle);
+    Point &rotate_z(double angle);
     SDL_FPoint project(double dist);
+    float get_x() const { return x; }
+    float get_y() const { return y; }
+    float get_z() const { return z; }
 };
 
 #endif

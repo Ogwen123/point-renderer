@@ -70,8 +70,8 @@ std::vector<Point> points = {
 
 std::vector<Face> faces = {{1, 0, 2, 3}, {0, 4, 6, 2}, {5, 1, 3, 7}, {5, 4, 0, 1}, {3, 2, 6, 7}, {5, 4, 6, 7}};
 
-double x_angle = 0;
-double y_angle = 0;
+double x_angle = SDL_PI_F / 6;
+double y_angle = SDL_PI_F / 3;
 double dist = 2;
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
@@ -181,8 +181,8 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             Point start_point = points[f[j]];
             Point end_point = points[f[(j + 1) % f.size()]];
 
-            SDL_FPoint start = screen(start_point.rotate_x(x_angle).project(dist));
-            SDL_FPoint end = screen(end_point.rotate_x(x_angle).project(dist));
+            SDL_FPoint start = screen(start_point.rotate_x(x_angle).rotate_y(y_angle).project(dist));
+            SDL_FPoint end = screen(end_point.rotate_x(x_angle).rotate_y(y_angle).project(dist));
 
             Line res;
 
