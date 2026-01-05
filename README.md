@@ -10,6 +10,8 @@ to run the code run the following commands
 git clone https://github.com/ogwen123/point-renderer.git
 cd point-renderer
 git clone https://github.com/libsdl-org/SDL.git vendored/SDL
+git clone https://github.com/libsdl-org/SDL_ttf.git vendored/SDL_ttf
+# follow installation instructions for SDL_ttf at https://github.com/libsdl-org/SDL_ttf/blob/main/docs/INTRO-cmake.md
 mkdir build
 cd build
 cmake ..

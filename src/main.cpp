@@ -1,6 +1,7 @@
 #define SDL_MAIN_USE_CALLBACKS 1
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <vector>
 #include <set>
 #include <iostream>
@@ -16,6 +17,9 @@
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
+static TTF_Font *font = NULL;
+static TTF_TextEngine *engine = NULL;
+static TTF_Text *text = NULL;
 
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 900
@@ -32,6 +36,9 @@ static SDL_Renderer *renderer = NULL;
 #define FG_G 0xff
 #define FG_B 0x50
 #define PI SDL_PI_F
+
+#define FONT_PATH "../assets/OpenSans-Regular.ttf"
+#define FONT_SIZE 20
 
 struct Line
 {
@@ -74,6 +81,8 @@ double x_angle = 0;
 // angle around the y axis
 double y_angle = 0;
 double dist = INITIAL_DISTANCE;
+Uint64 dt = 0;
+
 MousePos pos = MousePos{0, 0};
 
 void update_pos(MousePos *pos)
@@ -131,6 +140,35 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
+
+    if (!TTF_Init())
+    {
+        SDL_Log("Couldn't initialize SDL_ttf: %s\n", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
+    // handle text init
+    font = TTF_OpenFont(FONT_PATH, FONT_SIZE);
+    if (!font)
+    {
+        SDL_Log("Couldn't open font: %s\n", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
+    engine = TTF_CreateRendererTextEngine(renderer);
+    if (!engine)
+    {
+        SDL_Log("Couldn't create text engine: %s\n", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
+    text = TTF_CreateText(engine, font, "Init", 0);
+    if (!text)
+    {
+        SDL_Log("Couldn't create text: %s\n", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+    TTF_SetTextColor(text, 255, 255, 255, SDL_ALPHA_OPAQUE);
 
     SDL_SetRenderLogicalPresentation(renderer, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
@@ -200,12 +238,12 @@ void handle_drag()
         {
             x_angle -= 2 * PI;
         }
-        while (y_angle < 2 * PI)
+        while (y_angle < 0)
         {
             y_angle += 2 * PI;
         }
 
-        while (x_angle < 2 * PI)
+        while (x_angle < 0)
         {
             x_angle += 2 * PI;
         }
@@ -281,10 +319,22 @@ SDL_AppResult SDL_AppIterate(void *appstate)
         SDL_RenderLine(renderer, line.start.x, line.start.y, line.end.x, line.end.y);
     }
 
+    float x = 0, y = 0;
+    Uint64 now = SDL_GetTicks();
+
+    (void)appstate;
+
+    char string[42];
+    SDL_snprintf(string, sizeof(string), "x angle: %.2f, y angle: %.2f, dt: %lums", x_angle, y_angle, dt);
+    TTF_SetTextString(text, string, 0);
+
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    TTF_DrawRendererText(text, x, y);
+
     SDL_RenderPresent(renderer);
     Uint64 end = SDL_GetTicks();
-
-    SDL_Delay((1000 / FPS) - (end - start));
+    dt = (end - start);
+    SDL_Delay((1000 / FPS) - dt);
 
     return SDL_APP_CONTINUE;
 }
