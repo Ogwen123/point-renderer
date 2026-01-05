@@ -1,6 +1,7 @@
 # renderer
 
 a simple point renderer
+![image](./readme_assets/image.png)
 
 ## Running
 
@@ -22,3 +23,4 @@ cmake --build .
 
 -   [x] load and display wavefont OBJ files
     -   [ ] add function to center models so they rotate correctly
+-   [ ] fix the larger teapot model immediately crashing the program
