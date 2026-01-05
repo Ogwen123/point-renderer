@@ -26,10 +26,12 @@ static SDL_Renderer *renderer = NULL;
 #define MIN_ZOOM 1
 #define MAX_ZOOM 10
 #define ZOOM_SENS 0.4
+#define INITIAL_DISTANCE 2
 
 #define FG_R 0x50
 #define FG_G 0xff
 #define FG_B 0x50
+#define PI SDL_PI_F
 
 struct Line
 {
@@ -54,6 +56,7 @@ bool operator<(const Line &lhs, const Line &rhs)
     return lhs.end.y < rhs.end.y;
 }
 
+// points and faces for a cube
 std::vector<Point> points = {
     Point{0.5, 0.5, -0.5},
     Point{-0.5, 0.5, -0.5},
@@ -64,26 +67,13 @@ std::vector<Point> points = {
     Point{0.5, -0.5, 0.5},
     Point{-0.5, -0.5, 0.5}};
 
-// std::vector<size_t> faces[] = {{0, 1, 2}, {1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {0, 2, 6}, {0, 4, 6}, {1, 3, 5}, {5, 3, 7}, {0, 1, 5}, {0, 4, 5}, {3, 7, 6}, {3, 2, 6}};
-// std::vector<Face> faces = {
-//     {1, 0},
-//     {1, 3},
-//     {1, 5},
-//     {0, 4},
-//     {0, 2},
-//     {2, 6},
-//     {2, 3},
-//     {5, 4},
-//     {4, 6},
-//     {6, 7},
-//     {7, 5},
-//     {3, 7}};
-
 std::vector<Face> faces = {{1, 0, 2, 3}, {0, 4, 6, 2}, {5, 1, 3, 7}, {5, 4, 0, 1}, {3, 2, 6, 7}, {5, 4, 6, 7}};
 
-double x_angle = SDL_PI_F / 6;
-double y_angle = SDL_PI_F / 3;
-double dist = 1;
+// angle around the x axis
+double x_angle = 0;
+// angle around the y axis
+double y_angle = 0;
+double dist = INITIAL_DISTANCE;
 MousePos pos = MousePos{0, 0};
 
 void update_pos(MousePos *pos)
@@ -184,8 +174,41 @@ void handle_drag()
     {
         MousePos delta = MousePos{pos.x - old.x, pos.y - old.y};
 
-        y_angle -= delta.x * (SDL_PI_F / 360); // 1 degree per pixel dragged
-        x_angle -= delta.y * (SDL_PI_F / 360);
+        int x_flip = 1;
+        int y_flip = 1;
+
+        if (x_angle > (PI / 2) && x_angle < (3 * PI / 2))
+        {
+            y_flip = -1;
+        }
+
+        if (y_angle > (PI / 2) && y_angle < (3 * PI / 2))
+        {
+            x_flip = -1;
+        }
+
+        y_angle -= delta.x * (PI / 360) * y_flip; // 1 degree per pixel dragged
+        x_angle -= delta.y * (PI / 360) * x_flip;
+
+        // keep withing normal range
+        while (y_angle > 2 * PI)
+        {
+            y_angle -= 2 * PI;
+        }
+
+        while (x_angle > 2 * PI)
+        {
+            x_angle -= 2 * PI;
+        }
+        while (y_angle < 2 * PI)
+        {
+            y_angle += 2 * PI;
+        }
+
+        while (x_angle < 2 * PI)
+        {
+            x_angle += 2 * PI;
+        }
     }
 }
 
@@ -210,6 +233,13 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
     case SDL_EVENT_MOUSE_WHEEL:
         handle_zoom(event->wheel);
         return SDL_APP_CONTINUE;
+    case SDL_EVENT_KEY_DOWN:
+        if (event->key.key == SDLK_SPACE)
+        {
+            // reset angles when space is pressed
+            y_angle = 0;
+            x_angle = 0;
+        }
     }
 
     return SDL_APP_CONTINUE;
