@@ -40,6 +40,8 @@ static TTF_Text *text = NULL;
 #define FONT_PATH "../assets/OpenSans-Regular.ttf"
 #define FONT_SIZE 20
 
+static double frame_time = 1000 / FPS;
+
 struct Line
 {
     SDL_FPoint start;
@@ -285,6 +287,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
+
     Uint64 start = SDL_GetTicks();
 
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, SDL_ALPHA_OPAQUE);
@@ -314,13 +317,13 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             to_draw.insert(res);
         }
     }
+
     for (Line line : to_draw)
     {
         SDL_RenderLine(renderer, line.start.x, line.start.y, line.end.x, line.end.y);
     }
 
     float x = 0, y = 0;
-    Uint64 now = SDL_GetTicks();
 
     (void)appstate;
 
@@ -332,9 +335,11 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     TTF_DrawRendererText(text, x, y);
 
     SDL_RenderPresent(renderer);
+
     Uint64 end = SDL_GetTicks();
     dt = (end - start);
-    SDL_Delay((1000 / FPS) - dt);
+    if (dt < frame_time)
+        SDL_Delay(frame_time - dt);
 
     return SDL_APP_CONTINUE;
 }
